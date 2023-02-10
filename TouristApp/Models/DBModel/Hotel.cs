@@ -13,7 +13,7 @@ namespace TouristApp.Models.DBModel
 
         public string Description { get; set; }
 
-        public string Comments { get; set; }
+        public string? Comments { get; set; }
 
         public byte[] Picture { get; set; }
     }
