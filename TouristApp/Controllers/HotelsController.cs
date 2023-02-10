@@ -22,6 +22,22 @@ namespace TouristApp.Controllers
         [Route("addhotel")]
         public IActionResult AddHotel([FromForm] AddHotel model)
         {
+            byte[] imageDetails;
+            
+            using (var stream = new MemoryStream())
+            {
+                 model.Image.CopyTo(stream);
+                 imageDetails = stream.ToArray();
+            }
+            var hotel = new Hotel()
+            {
+                Name = model.Name,
+                Address = model.Address,
+                Description = model.Description,
+                Picture = imageDetails
+            };
+            _context.Hotels.Add(hotel);
+            _context.SaveChanges();
             return Ok();
         }
 
@@ -30,8 +46,16 @@ namespace TouristApp.Controllers
         public IActionResult ViewHotel(int hotelid)
         {
             var hotel = _context.Hotels.FirstOrDefault(x => x.Id == hotelid);
-
-            return Ok(hotel);
+            var responseHotel = new ViewHotel()
+            {
+                Id = hotel.Id,
+                Name = hotel.Name,
+                Address = hotel.Address,
+                Comments = hotel.Comments,
+                Description = hotel.Description,
+                Image = Convert.ToBase64String(hotel.Picture)
+            };
+            return Ok(responseHotel);
         }
 
         //listhotels
@@ -50,8 +74,12 @@ namespace TouristApp.Controllers
         {
 
             var hotel = _context.Hotels.FirstOrDefault(x => x.Id == model.HotelId);
-            var comments = JsonConvert.DeserializeObject<List<string>>(hotel.Comments);
-            comments.Add(model.Comment);
+            if (hotel.Comments == null)
+            {
+                hotel.Comments = "";
+            }
+            var comments = JsonConvert.DeserializeObject<List<string>>(hotel.Comments) ?? new List<string>();
+            comments.Add(model.Comment.Trim());
             hotel.Comments = JsonConvert.SerializeObject(comments);
             _context.Update(hotel);
             _context.SaveChanges();
@@ -71,6 +99,7 @@ namespace TouristApp.Controllers
             var hotel = _context.Hotels.FirstOrDefault(x => x.Id == hotelId);
             var comments = JsonConvert.DeserializeObject<List<string>>(hotel.Comments);
             comments.Remove(comments[commentIndex]);
+            hotel.Comments = JsonConvert.SerializeObject(comments);
             _context.Hotels.Update(hotel);
             _context.SaveChanges();
 

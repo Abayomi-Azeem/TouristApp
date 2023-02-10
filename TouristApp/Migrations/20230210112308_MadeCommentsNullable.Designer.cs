@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TouristApp.Models.DBModel;
 
@@ -10,9 +11,11 @@ using TouristApp.Models.DBModel;
 namespace TouristApp.Migrations
 {
     [DbContext(typeof(TouristAppDbContext))]
-    partial class TouristAppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230210112308_MadeCommentsNullable")]
+    partial class MadeCommentsNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
