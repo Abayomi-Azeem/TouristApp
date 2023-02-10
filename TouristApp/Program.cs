@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using TouristApp.Models.DBModel;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,8 +9,9 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddSqlServer<TouristAppDbContext>(builder.Configuration.GetConnectionString("AppDbContext"));
-
+builder.Services.AddDbContext<TouristAppDbContext>(options=> options.UseSqlServer(builder.Configuration.GetConnectionString("AppDbContext"), x=> x.EnableRetryOnFailure()));
+builder.Services.AddCors(options =>
+                                   options.AddDefaultPolicy(x=> x.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
 
 var app = builder.Build();
 
@@ -21,7 +23,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseRouting();
+app.UseCors();
 app.UseAuthorization();
 
 app.MapControllers();
