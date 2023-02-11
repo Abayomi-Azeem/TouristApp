@@ -73,65 +73,95 @@ namespace TouristApp.Controllers
         public IActionResult AddComments([FromBody] AddComment model)
         {
 
-            var hotel = _context.Hotels.FirstOrDefault(x => x.Id == model.HotelId);
-            if (hotel.Comments == null)
+            try
             {
-                hotel.Comments = "";
+                var hotel = _context.Hotels.FirstOrDefault(x => x.Id == model.HotelId);
+                if (hotel.Comments == null)
+                {
+                    hotel.Comments = "";
+                }
+                var comments = JsonConvert.DeserializeObject<List<string>>(hotel.Comments) ?? new List<string>();
+                comments.Add(model.Comment.Trim());
+                hotel.Comments = JsonConvert.SerializeObject(comments);
+                _context.Update(hotel);
+                _context.SaveChanges();
+                return Ok("Comment Added Succesfully");
             }
-            var comments = JsonConvert.DeserializeObject<List<string>>(hotel.Comments) ?? new List<string>();
-            comments.Add(model.Comment.Trim());
-            hotel.Comments = JsonConvert.SerializeObject(comments);
-            _context.Update(hotel);
-            _context.SaveChanges();
-            return Ok("Comment Added Succesfully");
+            catch (Exception ex)
+            {
+                return BadRequest("Unable to successfully add comment");
+            }
         }
-
+        
         [HttpGet]
         [Route("removecomment")]
         public IActionResult RemoveComment(int userId, int hotelId, int commentIndex)
         {
-            var user = _context.Users.FirstOrDefault(x => x.Id == userId);
-            if (user.Role.ToLower() == "user")
+            try
             {
-                return Unauthorized("Unauthroised Action");
+                var user = _context.Users.FirstOrDefault(x => x.Id == userId);
+                if (user.Role.ToLower() == "user")
+                {
+                    return Unauthorized("Unauthroised Action");
+                }
+
+                var hotel = _context.Hotels.FirstOrDefault(x => x.Id == hotelId);
+                var comments = JsonConvert.DeserializeObject<List<string>>(hotel.Comments);
+                comments.Remove(comments[commentIndex]);
+                hotel.Comments = JsonConvert.SerializeObject(comments);
+                _context.Hotels.Update(hotel);
+                _context.SaveChanges();
+
+                return Ok();
             }
-
-            var hotel = _context.Hotels.FirstOrDefault(x => x.Id == hotelId);
-            var comments = JsonConvert.DeserializeObject<List<string>>(hotel.Comments);
-            comments.Remove(comments[commentIndex]);
-            hotel.Comments = JsonConvert.SerializeObject(comments);
-            _context.Hotels.Update(hotel);
-            _context.SaveChanges();
-
-            return Ok();
+            catch (Exception ex)
+            {
+                return BadRequest("Unable to successfully remove comments");
+               
+            }
         }
 
         [HttpGet]
         [Route("listusers")]
         public IActionResult ListUsers(int userId)
         {
-            var user = _context.Users.FirstOrDefault(x => x.Id == userId);
-            if (user.Role.ToLower() == "user")
+            try
             {
-                return Unauthorized("Unauthorized Action");
+                var user = _context.Users.FirstOrDefault(x => x.Id == userId);
+                if (user.Role.ToLower() == "user")
+                {
+                    return Unauthorized("Unauthorized Action");
+                }
+                var users = _context.Users.Where(x => x.Role.ToLower() != "admin").ToList();
+                return Ok(users);
             }
-            var users = _context.Users.Where(x=> x.Role.ToLower() != "admin").ToList();
-            return Ok(users);
+            catch (Exception)
+            {
+                return BadRequest("An Error was Encountered");                
+            }
         }
 
         [HttpDelete]
         [Route("deleteuser")]
         public IActionResult DeleteUser(int userId, int deletedUser)
         {
-            var user = _context.Users.FirstOrDefault(x => x.Id == userId);
-            if (user.Role.ToLower() == "user")
+            try
             {
-                return Unauthorized("Unauthorized Action");
+                var user = _context.Users.FirstOrDefault(x => x.Id == userId);
+                if (user.Role.ToLower() == "user")
+                {
+                    return Unauthorized("Unauthorized Action");
+                }
+                var userToBeRemoved = _context.Users.Find(deletedUser);
+                _context.Users.Remove(userToBeRemoved);
+                _context.SaveChanges();
+                return Ok();
             }
-            var userToBeRemoved = _context.Users.Find(deletedUser);
-            _context.Users.Remove(userToBeRemoved);
-            _context.SaveChanges();
-            return Ok();
+            catch (Exception)
+            {
+                return BadRequest("Unable to successfully remove Users");
+               
+            }
         }
     }
 }
